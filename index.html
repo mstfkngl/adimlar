@@ -1,4 +1,13 @@
-<!DOCTYPE html>
+            .progress-container {
+                min-width: 100%;
+                margin-top: 5px;
+            }
+            
+            .point {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5em;
+            }<!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
@@ -124,9 +133,26 @@
             white-space: nowrap;
         }
 
+        .nav-btn.big {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            font-size: 2em;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
         .nav-btn:hover {
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+        }
+
+        .nav-btn.big:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.6);
         }
 
         .nav-btn:disabled {
@@ -134,6 +160,12 @@
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
+        }
+
+        .small-buttons {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .step-info {
@@ -190,6 +222,14 @@
             justify-content: center;
             align-items: center;
             gap: 30px;
+            margin: 30px 0;
+        }
+
+        .step-visual-container {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            justify-content: center;
             margin: 30px 0;
         }
 
@@ -311,7 +351,7 @@
                 gap: 8px;
             }
             
-            .nav-buttons {
+            .small-buttons {
                 order: 1;
             }
             
@@ -329,22 +369,18 @@
                 font-size: 0.8em;
             }
             
-            .progress-container {
-                min-width: 100%;
-                margin-top: 5px;
-            }
-            
-            .step-visual {
+            .step-visual-container {
                 flex-direction: column;
                 gap: 15px;
                 margin: 20px 0;
             }
             
-            .arrow {
-                transform: rotate(90deg);
+            .step-visual {
+                flex-direction: row;
+                gap: 20px;
             }
             
-            .point {
+            .nav-btn.big {
                 width: 60px;
                 height: 60px;
                 font-size: 1.5em;
@@ -391,11 +427,9 @@
 
         <div class="controls" id="controls">
             <div class="control-row">
-                <div class="nav-buttons">
+                <div class="small-buttons">
                     <button class="nav-btn" id="firstBtn">⏮️</button>
-                    <button class="nav-btn" id="prevBtn">⬅️</button>
                     <button class="nav-btn" id="playBtn">▶️</button>
-                    <button class="nav-btn" id="nextBtn">➡️</button>
                     <button class="nav-btn" id="lastBtn">⏭️</button>
                 </div>
                 
@@ -420,10 +454,16 @@
                 <div class="step-number" id="stepNumber">1</div>
             </div>
 
-            <div class="step-visual">
-                <div class="point" id="fromPoint">1</div>
-                <div class="arrow">→</div>
-                <div class="point" id="toPoint">2</div>
+            <div class="step-visual-container">
+                <button class="nav-btn big" id="prevBtn">⬅️</button>
+                
+                <div class="step-visual">
+                    <div class="point" id="fromPoint">1</div>
+                    <div class="arrow">→</div>
+                    <div class="point" id="toPoint">2</div>
+                </div>
+                
+                <button class="nav-btn big" id="nextBtn">➡️</button>
             </div>
 
             <div class="stats">
