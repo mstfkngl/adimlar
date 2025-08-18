@@ -414,6 +414,9 @@
         <div class="header">
             <h1>🎨 String Art Adım Görüntüleyici</h1>
             <p>String art uygulamalarından aldığınız rakam dizilerini kolayca takip edin</p>
+            <div style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                <strong>💾 Otomatik Kaydetme:</strong> İlerlemeniz otomatik olarak kaydedilir, istediğiniz zaman kaldığınız yerden devam edebilirsiniz
+            </div>
         </div>
 
         <div class="upload-area" id="uploadArea">
@@ -488,6 +491,90 @@
         let currentStep = 0;
         let isPlaying = false;
         let playInterval;
+        let fileName = '';
+
+        // LocalStorage anahtarları
+        const STORAGE_KEYS = {
+            numbers: 'stringArt_numbers',
+            currentStep: 'stringArt_currentStep',
+            fileName: 'stringArt_fileName',
+            speed: 'stringArt_speed'
+        };
+
+        // Veri kaydetme fonksiyonu
+        function saveToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEYS.numbers, JSON.stringify(numbers));
+                localStorage.setItem(STORAGE_KEYS.currentStep, currentStep.toString());
+                localStorage.setItem(STORAGE_KEYS.fileName, fileName);
+                localStorage.setItem(STORAGE_KEYS.speed, speedInput.value);
+            } catch (error) {
+                console.log('Storage kaydetme hatası:', error);
+            }
+        }
+
+        // Veri yükleme fonksiyonu
+        function loadFromStorage() {
+            try {
+                const savedNumbers = localStorage.getItem(STORAGE_KEYS.numbers);
+                const savedStep = localStorage.getItem(STORAGE_KEYS.currentStep);
+                const savedFileName = localStorage.getItem(STORAGE_KEYS.fileName);
+                const savedSpeed = localStorage.getItem(STORAGE_KEYS.speed);
+
+                if (savedNumbers) {
+                    numbers = JSON.parse(savedNumbers);
+                    currentStep = parseInt(savedStep) || 0;
+                    fileName = savedFileName || '';
+                    
+                    if (savedSpeed) {
+                        speedInput.value = savedSpeed;
+                    }
+
+                    if (numbers.length > 1) {
+                        // Dosya adını göster
+                        if (fileName) {
+                            document.querySelector('.header p').textContent = 
+                                `Devam ediliyor: ${fileName} - ${numbers.length} rakam, ${numbers.length - 1} adım`;
+                        }
+                        
+                        controls.style.display = 'block';
+                        stepDisplay.style.display = 'block';
+                        updateDisplay();
+                        updateStats();
+                        
+                        // Upload alanını gizle ve devam mesajı göster
+                        uploadArea.innerHTML = `
+                            <h3>📂 Kaydedilen Dosya Devam Ediyor</h3>
+                            <p><strong>${fileName || 'Bilinmeyen dosya'}</strong></p>
+                            <p>${numbers.length} rakam • Adım ${currentStep + 1} / ${numbers.length - 1}</p>
+                            <button class="upload-btn" onclick="clearStorage()">
+                                🗑️ Temizle ve Yeni Dosya Yükle
+                            </button>
+                        `;
+                        
+                        return true;
+                    }
+                }
+            } catch (error) {
+                console.log('Storage yükleme hatası:', error);
+            }
+            return false;
+        }
+
+        // Storage temizleme fonksiyonu
+        function clearStorage() {
+            try {
+                localStorage.removeItem(STORAGE_KEYS.numbers);
+                localStorage.removeItem(STORAGE_KEYS.currentStep);
+                localStorage.removeItem(STORAGE_KEYS.fileName);
+                localStorage.removeItem(STORAGE_KEYS.speed);
+            } catch (error) {
+                console.log('Storage temizleme hatası:', error);
+            }
+            
+            // Sayfayı yenile
+            location.reload();
+        }
 
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
@@ -536,7 +623,7 @@
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const content = e.target.result;
-                    parseContent(content);
+                    parseContent(content, file.name);
                 };
                 reader.onerror = function() {
                     alert('Dosya okunamadı. Lütfen tekrar deneyin.');
@@ -548,7 +635,7 @@
             }
         }
 
-        function parseContent(content) {
+        function parseContent(content, fileNameParam) {
             // Önce CSV formatında mı kontrol et (virgülle ayrılmış tek satır)
             const lines = content.trim().split('\n');
             let matches = [];
@@ -568,6 +655,10 @@
 
             numbers = matches.map(num => parseInt(num));
             currentStep = 0;
+            fileName = fileNameParam;
+            
+            // Verileri kaydet
+            saveToStorage();
             
             // UI'yi göster
             controls.style.display = 'block';
@@ -575,6 +666,16 @@
             
             updateDisplay();
             updateStats();
+            
+            // Upload alanını güncelle
+            uploadArea.innerHTML = `
+                <h3>✅ Dosya Yüklendi</h3>
+                <p><strong>${fileName}</strong></p>
+                <p>${numbers.length} rakam • ${numbers.length - 1} adım</p>
+                <button class="upload-btn" onclick="clearStorage()">
+                    🗑️ Temizle ve Yeni Dosya Yükle
+                </button>
+            `;
             
             console.log(`${numbers.length} rakam yüklendi:`, numbers.slice(0, 10) + (numbers.length > 10 ? '...' : ''));
         }
@@ -599,6 +700,9 @@
             document.getElementById('firstBtn').disabled = currentStep === 0;
             document.getElementById('nextBtn').disabled = currentStep >= numbers.length - 2;
             document.getElementById('lastBtn').disabled = currentStep >= numbers.length - 2;
+            
+            // İlerlemeyi kaydet
+            saveToStorage();
         }
 
         function updateStats() {
@@ -678,6 +782,9 @@
                 e.target.value = 60;
             }
             
+            // Hız ayarını kaydet
+            saveToStorage();
+            
             if (isPlaying) {
                 stopPlay();
                 startPlay();
@@ -687,6 +794,15 @@
         speedInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 e.target.blur();
+            }
+        });
+
+        // Sayfa yüklendiğinde kaydedilen verileri yükle
+        document.addEventListener('DOMContentLoaded', function() {
+            const hasData = loadFromStorage();
+            if (!hasData) {
+                // Eğer kaydedilmiş veri yoksa normal upload alanını göster
+                console.log('Kaydedilmiş veri bulunamadı, yeni dosya yükleme bekleniyor.');
             }
         });
 
